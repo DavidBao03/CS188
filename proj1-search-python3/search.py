@@ -174,7 +174,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         if node not in visited:
             visited.add(node)
             for next_node in problem.getSuccessors(node):
-                newcost = heuristic(next_node[0], problem)
+                newcost = heuristic(next_node[0], problem) + next_node[2]
                 newpath = path + [next_node[1]]
                 newstate = next_node[0]
                 fringe.push((newstate, newpath), newcost)
