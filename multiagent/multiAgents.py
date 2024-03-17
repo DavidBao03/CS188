@@ -74,7 +74,20 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        foods = newFood.asList();
+        disToGhost = 1e9
+        for ghostState in newGhostStates:
+            gx, gy = ghostState.getPosition()
+            gx, gy = int(gx), int(gy)
+            disToGhost = min(disToGhost, manhattanDistance((gx, gy), newPos))
+
+        disToFood = 1e9
+        if not foods:
+            disToFood = 0;
+        for food in foods:
+            disToFood = min(disToFood, manhattanDistance((gx, gy), newPos))
+
+        return successorGameState.getScore() - 7/(disToGhost + 1)- disToFood/3
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -135,7 +148,49 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.minimaxSearch(gameState, agentIndex=0, depth=self.depth)[1]
+
+    def minimaxSearch(self, gameState, agentIndex, depth):
+        if depth == 0 or gameState.isWin() or gameState.isLose():
+            ret = self.evaluationFunction(gameState), Directions.STOP
+        elif agentIndex == 0:
+            ret = self.maxmimizer(gameState, agentIndex, depth)
+        else:
+            ret = self.minmimizer(gameState, agentIndex, depth)
+        return ret
+
+    def minmimizer(self, gameState, agentIndex, depth):
+        actions = gameState.getLegalActions(agentIndex)
+        if agentIndex == gameState.getNumAgents() - 1:
+            next_agent, next_depth = 0, depth - 1
+        else:
+            next_agent, next_depth = agentIndex + 1, depth
+
+        min_score = 1e9
+        min_action = Directions.STOP
+        for action in actions:
+            next_gameState = gameState.generateSuccessor(agentIndex, action)
+            new_score = self.minimaxSearch(next_gameState, next_agent, next_depth)[0]
+            if new_score < min_score:
+                min_score, min_action = new_score, action
+        return min_score, min_action
+
+    def maxmimizer(self, gameState, agentIndex, depth):
+        actions = gameState.getLegalActions(agentIndex)
+        if agentIndex == gameState.getNumAgents() - 1:
+            next_agent, next_depth = 0, depth - 1
+        else:
+            next_agent, next_depth = agentIndex + 1, depth
+
+        max_score = -1e9
+        max_action = Directions.STOP
+        for action in actions:
+            next_gameState = gameState.generateSuccessor(agentIndex, action)
+            new_score = self.minimaxSearch(next_gameState, next_agent, next_depth)[0]
+            if new_score > max_score:
+                max_score, max_action = new_score, action
+        return max_score, max_action
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
