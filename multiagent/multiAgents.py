@@ -80,6 +80,8 @@ class ReflexAgent(Agent):
             gx, gy = ghostState.getPosition()
             gx, gy = int(gx), int(gy)
             disToGhost = min(disToGhost, manhattanDistance((gx, gy), newPos))
+            if newScaredTimes == 0:
+                disToGhost = min(disToGhost, manhattanDistance((gx, gy), newPos))
 
         disToFood = 1e9
         if not foods:
@@ -202,7 +204,56 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.alphaBetaSearch(gameState, agentIndex=0, depth=self.depth, a=-1e9, b=1e9)[1]
+
+    def alphaBetaSearch(self, gameState, agentIndex, depth, a, b):
+        if depth == 0 or gameState.isWin() or gameState.isLose():
+            ret = self.evaluationFunction(gameState), Directions.STOP
+        elif agentIndex == 0:
+            ret = self.alphaSerach(gameState, agentIndex, depth, a, b)
+        else:
+            ret = self.betaSearch(gameState, agentIndex, depth, a, b)
+        return ret
+
+    def alphaSerach(self, gameState, agentIndex, depth, a, b):
+        actions = gameState.getLegalActions(agentIndex)
+        if agentIndex == gameState.getNumAgents() - 1:
+            next_agent, next_depth = 0, depth - 1
+        else:
+            next_agent, next_depth = agentIndex + 1, depth
+
+        max_score = -1e9
+        max_action = Directions.STOP
+        for action in actions:
+            next_gameState = gameState.generateSuccessor(agentIndex, action)
+            new_score = self.alphaBetaSearch(next_gameState, next_agent, next_depth, a, b)[0]
+            if new_score > max_score:
+                max_score, max_action = new_score, action
+            if new_score > b:
+                return new_score, action
+            a = max(a, new_score)
+        return max_score, max_action
+
+    def betaSearch(self, gameState, agentIndex, depth, a, b):
+        actions = gameState.getLegalActions(agentIndex)
+        if agentIndex == gameState.getNumAgents() - 1:
+            next_agent, next_depth = 0, depth - 1
+        else:
+            next_agent, next_depth = agentIndex + 1, depth
+
+        min_score = 1e9
+        min_action = Directions.STOP
+        for action in actions:
+            next_gameState = gameState.generateSuccessor(agentIndex, action)
+            new_score = self.alphaBetaSearch(next_gameState, next_agent, next_depth, a, b)[0]
+            if new_score < min_score:
+                min_score, min_action = new_score, action
+            if new_score < a:
+                return new_score, action
+            b = min(b, new_score)
+        return min_score, min_action
+
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
