@@ -268,7 +268,48 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.expectimaxSearch(gameState, agentIndex=0, depth=self.depth)[1]
+
+    def expectimaxSearch(self, gameState, agentIndex, depth):
+        if depth == 0 or gameState.isWin() or gameState.isLose():
+            ret = self.evaluationFunction(gameState), Directions.STOP
+        elif agentIndex == 0:
+            ret = self.maxSerach(gameState, agentIndex, depth)
+        else:
+            ret = self.expectiSearch(gameState, agentIndex, depth)
+        return ret
+
+    def maxSerach(self, gameState, agentIndex, depth):
+        actions = gameState.getLegalActions(agentIndex)
+        if agentIndex == gameState.getNumAgents() - 1:
+            next_agent, next_depth = 0, depth - 1
+        else:
+            next_agent, next_depth = agentIndex + 1, depth
+
+        max_score = -1e9
+        max_action = Directions.STOP
+        for action in actions:
+            next_gameState = gameState.generateSuccessor(agentIndex, action)
+            new_score = self.expectimaxSearch(next_gameState, next_agent, next_depth)[0]
+            if new_score > max_score:
+                max_score, max_action = new_score, action
+        return max_score, max_action
+
+    def expectiSearch(self, gameState, agentIndex, depth):
+        actions = gameState.getLegalActions(agentIndex)
+        if agentIndex == gameState.getNumAgents() - 1:
+            next_agent, next_depth = 0, depth - 1
+        else:
+            next_agent, next_depth = agentIndex + 1, depth
+
+        exp_score = 0
+        exp_action = Directions.STOP
+        for action in actions:
+            next_gameState = gameState.generateSuccessor(agentIndex, action)
+            new_score = self.expectimaxSearch(next_gameState, next_agent, next_depth)[0]
+            exp_score += new_score
+        exp_score /= len(actions)
+        return exp_score, exp_action
 
 def betterEvaluationFunction(currentGameState):
     """
